@@ -16,8 +16,31 @@ https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" \
 
 sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
-########
 
+
+
+########
+# Load required kernel modules
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# Persist them
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+
+# Set sysctl params required by Kubernetes
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+# Apply sysctl changes
+sudo sysctl --system
+
+######
 
 #Step 2(On Master Node)
 sudo kubeadm init --pod-network-cidr=192.168.0.0/16
