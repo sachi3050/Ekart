@@ -24,7 +24,7 @@ sudo kubeadm init --pod-network-cidr=192.168.0.0/16
 
 #Step 3 (On Worker Node)
 mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/cofig
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 
