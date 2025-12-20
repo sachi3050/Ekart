@@ -16,14 +16,11 @@ https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" \
 
 sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
-
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16
-
-
 ########
 
+
 #Step 2(On Master Node)
-kubeadm init --pod-network-cidr=192.168.0.0/16
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16
 
 #Step 3 (On Worker Node)
 mkdir -p $HOME/.kube
