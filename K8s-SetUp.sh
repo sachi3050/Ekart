@@ -1,10 +1,9 @@
-#K8s SetUp (Both)
+####🔹 Step 0: Prepare ALL nodes (Master + Workers)
 
-#sudo apt-get update
-#sudo apt install docker.io -y
-#sudo service docker restart
+sudo apt update
+sudo apt install docker.io -y
+sudo systemctl enable docker && sudo systemctl start docker
 
-#########
 sudo apt-get install -y apt-transport-https ca-certificates curl
 
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key \
@@ -14,50 +13,77 @@ echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] \
 https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" \
 | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
-sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt update
+sudo apt install -y kubelet kubeadm kubectl
 
-
-
-########
-# Load required kernel modules
+######## Kernel + Networking (MANDATORY)
 sudo modprobe overlay
 sudo modprobe br_netfilter
 
-# Persist them
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
 EOF
 
-# Set sysctl params required by Kubernetes
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward = 1
 EOF
 
-# Apply sysctl changes
 sudo sysctl --system
 
-######
-
-#Step 2(On Master Node)
+#####🔹 Step 1: Initialize MASTER ONLY
 sudo kubeadm init --pod-network-cidr=192.168.0.0/16
-
-#Step 3 (On Worker Node)
+#Then:
 mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-
-# Calico
-curl https://raw.githubusercontent.com/projectcalico/calico/v3.31.3/manifests/calico.yaml -O
-
-#Correct BareMeta, 2025 Command:-
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/baremetal/deploy.yaml
+#✅ At this point: (1)API server is alive. (2)kubectl works. (3)Node will show NotReady (EXPECTED)
 
 
 
+######🔹 Step 2: Install CNI FIRST (before workers)
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.31.3/manifests/calico.yaml
+#Wait until: 
+kubectl get nodes
+
+#Shows :
+control-plane   Ready
 
 
+
+####🔹 Step 3: Join Workers (ONCE, ONLY ON WORKERS)
+kubeadm join <MASTER-IP>:6443 --token <token> \
+--discovery-token-ca-cert-hash sha256:<hash>
+
+# ⚠️ Never repeat join, ⚠️ Never run on master
+
+
+
+#####🔹 Step 4: Ingress (after cluster is Ready)
+kubectl apply -f \
+https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/baremetal/deploy.yaml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##
