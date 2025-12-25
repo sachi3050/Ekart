@@ -4,7 +4,7 @@ sudo apt update
 sudo apt install docker.io -y
 sudo systemctl enable docker && sudo systemctl start docker
 
-sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key \
 | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
